@@ -1,0 +1,48 @@
+import requests
+import time
+
+# Define API endpoints
+SELLERCHAMP_ORDERS_URL = "http://api.sellerchamp.com/orders"
+AUTODIST_UPDATE_ORDER_URL = "https://api.autodist.com/orders/update"
+
+# API Keys (Replace with actual keys)
+SELLERCHAMP_API_KEY = "your_sellerchamp_api_key"
+AUTODIST_API_KEY = "your_autodist_api_key"
+
+# Retrieve orders from SellerChamp
+def get_orders():
+    headers = {"Authorization": f"Bearer {SELLERCHAMP_API_KEY}"}
+    response = requests.get(SELLERCHAMP_ORDERS_URL, headers=headers)
+    
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Failed to fetch orders: {response.status_code}, {response.text}")
+        return None
+
+# Update order in AutoDist
+def update_order(order_id, update_data):
+    headers = {
+        "Authorization": f"Bearer {AUTODIST_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    response = requests.put(f"{AUTODIST_UPDATE_ORDER_URL}/{order_id}", json=update_data, headers=headers)
+    
+    if response.status_code == 200:
+        print(f"Order {order_id} updated successfully.")
+    else:
+        print(f"Failed to update order {order_id}: {response.status_code}, {response.text}")
+
+# Run the script every 2 hours
+if __name__ == "__main__":
+    while True:
+        orders = get_orders()
+        
+        if orders:
+            for order in orders.get("data", []):  # Assuming orders are under "data" key
+                order_id = order.get("id")
+                update_data = {"status": "processed"}  # Example update
+                update_order(order_id, update_data)
+        
+        print("Waiting for 2 hours before the next run...")
+        time.sleep(7200)  # Sleep for 2 hours (7200 seconds)
